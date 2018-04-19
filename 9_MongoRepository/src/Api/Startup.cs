@@ -29,6 +29,26 @@ namespace Api
             services.AddMvcCore()
                 .AddAuthorization()
                 .AddJsonFormatters();
+
+            services.AddAuthentication("Bearer")
+                .AddIdentityServerAuthentication(options =>
+                {
+                    options.Authority = "http://localhost:5000";
+                    options.RequireHttpsMetadata = false;
+
+                    options.ApiName = "api1";
+                });
+
+            services.AddCors(options =>
+            {
+                // this defines a CORS policy called "default"
+                options.AddPolicy("default", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5003")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -36,14 +56,9 @@ namespace Api
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
-            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
-            {
-                Authority = "http://localhost:5000",
-                RequireHttpsMetadata = false,
-                ////AllowedScopes = { "OpenId", "Profile", "Email"},
+            app.UseCors("default");
 
-                ApiName = "api.sample"
-            });
+            app.UseAuthentication();
 
             app.UseMvc();
         }

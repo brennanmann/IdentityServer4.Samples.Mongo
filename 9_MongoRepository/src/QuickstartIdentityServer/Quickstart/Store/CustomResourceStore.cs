@@ -48,15 +48,10 @@ namespace QuickstartIdentityServer.Quickstart.Store
             return Task.FromResult(list.AsEnumerable());
         }
 
-        public Task<Resources> GetAllResources()
+        public Task<Resources> GetAllResourcesAsync()
         {
             var result = new Resources(GetAllIdentityResources(), GetAllApiResources());
             return Task.FromResult(result);
-        }
-
-        private Func<IdentityResource, bool> BuildPredicate(Func<IdentityResource, bool> predicate)
-        {
-            return predicate;
         }
     }
 }

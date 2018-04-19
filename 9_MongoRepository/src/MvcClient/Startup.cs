@@ -25,6 +25,31 @@ namespace MvcClient
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = "Cookies";
+                    options.DefaultChallengeScheme = "oidc";
+                })
+                .AddCookie("Cookies")
+                .AddOpenIdConnect("oidc", options =>
+                {
+                    options.SignInScheme = "Cookies";
+
+                    options.Authority = "http://localhost:5000";
+                    options.RequireHttpsMetadata = false;
+
+                    options.ClientId = "mvc";
+                    options.ClientSecret = "secret";
+                    options.ResponseType = "code id_token";
+
+                    options.SaveTokens = true;
+                    options.GetClaimsFromUserInfoEndpoint = true;
+
+                    options.Scope.Add("api1");
+                    options.Scope.Add("offline_access");
+                });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -43,29 +68,8 @@ namespace MvcClient
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AuthenticationScheme = "Cookies"
-            });
+            app.UseAuthentication();
 
-            app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
-            {
-                AuthenticationScheme = "oidc",
-                SignInScheme = "Cookies",
-
-                Authority = "http://localhost:5000",
-                RequireHttpsMetadata = false,
-
-                ClientId = "mvc",
-                ClientSecret = "secret",
-
-                ResponseType = "code id_token",
-                Scope = { "api.sample", "offline_access" },
-
-                GetClaimsFromUserInfoEndpoint = true,
-                SaveTokens = true
-            });
-            
             app.UseStaticFiles();
             app.UseMvcWithDefaultRoute();
         }
